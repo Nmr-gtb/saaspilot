@@ -6,23 +6,18 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard,
-  BarChart3,
-  Users,
-  CreditCard,
+  Puzzle,
   Settings,
   Bell,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Badge } from '@/components/ui/badge'
 import { useState } from 'react'
 
 const navItems = [
   { title: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
-  { title: 'Revenus', href: '/dashboard/revenue', icon: BarChart3 },
-  { title: 'Clients', href: '/dashboard/customers', icon: Users },
-  { title: 'Facturation', href: '/dashboard/billing', icon: CreditCard },
-  { title: 'Alertes', href: '/dashboard/alerts', icon: Bell, badge: '3' },
-  { title: 'Paramètres', href: '/dashboard/settings', icon: Settings },
+  { title: 'Intégrations', href: '/dashboard/settings', icon: Puzzle },
+  { title: 'Alertes', href: '/dashboard/alerts', icon: Bell },
+  { title: 'Paramètres', href: '/dashboard/settings#compte', icon: Settings },
 ]
 
 export function MobileNav() {
@@ -47,7 +42,8 @@ export function MobileNav() {
         <nav className="space-y-0.5 p-2">
           {navItems.map((item) => {
             const Icon = item.icon
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+            const baseHref = item.href.split('#')[0]
+            const isActive = pathname === baseHref || (baseHref !== '/dashboard' && pathname.startsWith(baseHref + '/'))
 
             return (
               <Link
@@ -64,11 +60,6 @@ export function MobileNav() {
               >
                 <Icon className="h-4 w-4 shrink-0" />
                 <span className="flex-1">{item.title}</span>
-                {item.badge && (
-                  <Badge variant="secondary" className="h-5 px-1.5 text-xs">
-                    {item.badge}
-                  </Badge>
-                )}
               </Link>
             )
           })}

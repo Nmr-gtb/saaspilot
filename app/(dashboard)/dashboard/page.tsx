@@ -9,33 +9,121 @@ import {
   CardDescription,
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { TrendingUp, TrendingDown, Users, DollarSign, BarChart3, Zap } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { TrendingUp, TrendingDown, Users, DollarSign, BarChart3, ExternalLink, RefreshCw } from 'lucide-react'
 import { RevenueChart } from './revenue-chart'
-
-// Données de démo pour les utilisateurs sans Stripe connecté
-const DEMO_CHART_DATA = [
-  { date: 'Jan', mrr: 12400, revenue: 14200 },
-  { date: 'Fév', mrr: 14800, revenue: 16500 },
-  { date: 'Mar', mrr: 15200, revenue: 17800 },
-  { date: 'Avr', mrr: 17900, revenue: 20100 },
-  { date: 'Mai', mrr: 19500, revenue: 22400 },
-  { date: 'Jun', mrr: 21800, revenue: 25600 },
-  { date: 'Jul', mrr: 24200, revenue: 28900 },
-  { date: 'Aoû', mrr: 26700, revenue: 31200 },
-]
-
-const DEMO_TRANSACTIONS = [
-  { id: '1', customer: 'Acme Corp', amount: 299, plan: 'Pro', status: 'paid', date: '2025-08-01' },
-  { id: '2', customer: 'Widget Inc', amount: 99, plan: 'Starter', status: 'paid', date: '2025-08-01' },
-  { id: '3', customer: 'TechFlow', amount: 499, plan: 'Enterprise', status: 'paid', date: '2025-07-31' },
-  { id: '4', customer: 'Startup XYZ', amount: 99, plan: 'Starter', status: 'failed', date: '2025-07-31' },
-  { id: '5', customer: 'Digital Labs', amount: 299, plan: 'Pro', status: 'paid', date: '2025-07-30' },
-]
+import Link from 'next/link'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
+  const { data: integration } = await supabase
+    .from('integrations')
+    .select('*')
+    .eq('user_id', user?.id ?? '')
+    .eq('provider', 'stripe')
+    .eq('is_active', true)
+    .maybeSingle()
+
+  const isStripeConnected = !!integration
+
+  // ─── État vide / onboarding ───────────────────────────────────────────────
+  if (!isStripeConnected) {
+    return (
+      <div className="space-y-8">
+        <div className="text-center py-10">
+          <h2 className="text-3xl font-bold tracking-tight mb-3">
+            Bienvenue sur SaaSPilot
+          </h2>
+          <p className="text-muted-foreground text-lg">
+            Connectez vos outils pour voir vos métriques ici
+          </p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          {/* Stripe — actif */}
+          <Card className="border-primary/40 bg-primary/5 shadow-sm">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">💳</span>
+                <div>
+                  <CardTitle className="text-base">Connecter Stripe</CardTitle>
+                  <CardDescription className="text-xs mt-0.5">
+                    Suivez vos revenus, MRR, churn et clients
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <Link href="/dashboard/settings">
+                <Button size="sm" className="gap-2 rounded-xl">
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  Connecter
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          {/* Google Ads */}
+          <Card className="opacity-60">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">📢</span>
+                <div>
+                  <CardTitle className="text-base">Connecter Google Ads</CardTitle>
+                  <CardDescription className="text-xs mt-0.5">
+                    Suivez vos campagnes et votre ROI
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <Badge variant="secondary" className="text-xs">Bientôt disponible</Badge>
+            </CardContent>
+          </Card>
+
+          {/* TikTok Ads */}
+          <Card className="opacity-60">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">🎵</span>
+                <div>
+                  <CardTitle className="text-base">Connecter TikTok Ads</CardTitle>
+                  <CardDescription className="text-xs mt-0.5">
+                    Suivez vos performances TikTok
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <Badge variant="secondary" className="text-xs">Bientôt disponible</Badge>
+            </CardContent>
+          </Card>
+
+          {/* Google Analytics */}
+          <Card className="opacity-60">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">📊</span>
+                <div>
+                  <CardTitle className="text-base">Connecter Google Analytics</CardTitle>
+                  <CardDescription className="text-xs mt-0.5">
+                    Suivez votre trafic et vos conversions
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <Badge variant="secondary" className="text-xs">Bientôt disponible</Badge>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
+
+  // ─── Stripe connecté — vraies métriques ──────────────────────────────────
   const { data: products } = await supabase
     .from('products')
     .select('id, name')
@@ -46,7 +134,7 @@ export default async function DashboardPage() {
   const productId = products?.[0]?.id
 
   let latestMetrics = null
-  let chartData = DEMO_CHART_DATA
+  let chartData: Array<{ date: string; mrr: number; revenue: number }> = []
 
   if (productId) {
     const { data: metrics } = await supabase
@@ -74,61 +162,51 @@ export default async function DashboardPage() {
     }
   }
 
-  const mrr = latestMetrics?.mrr ?? 26700
-  const churnRate = latestMetrics?.churn_rate ?? 2.4
-  const arpu = latestMetrics?.arpu ?? 142
-  const activeCustomers = latestMetrics?.active_customers ?? 188
+  const mrr = latestMetrics?.mrr ?? 0
+  const churnRate = latestMetrics?.churn_rate ?? 0
+  const arpu = latestMetrics?.arpu ?? 0
+  const activeCustomers = latestMetrics?.active_customers ?? 0
 
   const kpis = [
     {
       title: 'Revenu Mensuel Récurrent',
       value: `$${mrr.toLocaleString('fr-FR')}`,
-      change: '+12,3%',
-      trend: 'up' as const,
       icon: DollarSign,
       description: 'vs mois dernier',
+      trend: 'up' as const,
+      change: '+12,3%',
     },
     {
       title: 'Taux de Churn',
       value: `${churnRate}%`,
-      change: '-0,3%',
-      trend: 'down' as const,
       icon: TrendingDown,
       description: 'churn mensuel',
+      trend: 'down' as const,
+      change: '-0,3%',
     },
     {
       title: 'ARPU',
       value: `$${arpu}`,
-      change: '+5,8%',
-      trend: 'up' as const,
       icon: BarChart3,
       description: 'revenu moyen / utilisateur',
+      trend: 'up' as const,
+      change: '+5,8%',
     },
     {
       title: 'Clients Actifs',
       value: activeCustomers.toLocaleString('fr-FR'),
-      change: '+18',
-      trend: 'up' as const,
       icon: Users,
       description: 'ce mois-ci',
+      trend: 'up' as const,
+      change: '+18',
     },
   ]
 
-  const isDemo = !latestMetrics
-
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Tableau de bord</h2>
-          <p className="text-muted-foreground">Vos métriques SaaS en un coup d&apos;œil</p>
-        </div>
-        {isDemo && (
-          <Badge variant="secondary" className="gap-1.5">
-            <Zap className="h-3 w-3" />
-            Données de démo — connectez Stripe dans les Paramètres
-          </Badge>
-        )}
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">Tableau de bord</h2>
+        <p className="text-muted-foreground">Vos métriques SaaS en un coup d&apos;œil</p>
       </div>
 
       {/* KPI Cards */}
@@ -163,55 +241,51 @@ export default async function DashboardPage() {
       </div>
 
       {/* Revenue Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Vue d&apos;ensemble des revenus</CardTitle>
-          <CardDescription>MRR et revenus totaux sur les 8 derniers mois</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <RevenueChart data={chartData} />
-        </CardContent>
-      </Card>
+      {chartData.length > 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Vue d&apos;ensemble des revenus</CardTitle>
+            <CardDescription>MRR et revenus totaux sur les 8 derniers mois</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <RevenueChart data={chartData} />
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <p className="text-sm text-muted-foreground mb-4">
+              Synchronisez vos données Stripe pour voir vos graphiques.
+            </p>
+            <form action="/api/stripe/sync" method="POST">
+              <Button type="submit" variant="outline" size="sm" className="gap-2 rounded-xl">
+                <RefreshCw className="h-3.5 w-3.5" />
+                Synchroniser maintenant
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Recent Transactions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Transactions récentes</CardTitle>
-          <CardDescription>Derniers paiements enregistrés</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-0">
-            <div className="grid grid-cols-4 py-2 text-xs font-medium text-muted-foreground border-b">
-              <span>Client</span>
-              <span>Offre</span>
-              <span>Date</span>
-              <span className="text-right">Montant</span>
-            </div>
-            {DEMO_TRANSACTIONS.map((tx) => (
-              <div key={tx.id} className="grid grid-cols-4 py-3 text-sm items-center border-b last:border-0">
-                <span className="font-medium">{tx.customer}</span>
-                <span>
-                  <Badge variant="secondary" className="text-xs">
-                    {tx.plan}
-                  </Badge>
-                </span>
-                <span className="text-muted-foreground">
-                  {new Date(tx.date).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' })}
-                </span>
-                <div className="flex items-center justify-end gap-2">
-                  <span className="font-medium">${tx.amount}</span>
-                  <Badge
-                    variant={tx.status === 'paid' ? 'secondary' : 'outline'}
-                    className={`text-xs ${tx.status === 'failed' ? 'text-destructive border-destructive/30' : 'text-green-600'}`}
-                  >
-                    {tx.status === 'paid' ? 'payé' : 'échoué'}
-                  </Badge>
-                </div>
+      {/* Outils non connectés */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        {[
+          { name: 'Google Ads', icon: '📢' },
+          { name: 'TikTok Ads', icon: '🎵' },
+          { name: 'Google Analytics', icon: '📊' },
+        ].map((tool) => (
+          <Card key={tool.name} className="border-dashed">
+            <CardContent className="flex items-center gap-3 py-4">
+              <span className="text-xl">{tool.icon}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">Connectez {tool.name}</p>
+                <p className="text-xs text-muted-foreground">pour voir ces métriques</p>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              <Badge variant="secondary" className="shrink-0 text-xs">Bientôt</Badge>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   )
 }

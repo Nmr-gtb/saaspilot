@@ -153,12 +153,14 @@ export default function LandingPage() {
               Et bien d&apos;autres à venir... Suggérez vos intégrations préférées.
             </p>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {[
               { name: 'Stripe', available: true, icon: '💳' },
+              { name: 'Google Ads', available: false, icon: '📢' },
+              { name: 'TikTok Ads', available: false, icon: '🎵' },
+              { name: 'Meta Ads', available: false, icon: '📘' },
               { name: 'Google Analytics', available: false, icon: '📊' },
               { name: 'Crisp', available: false, icon: '💬' },
-              { name: 'Intercom', available: false, icon: '🎯' },
               { name: 'Plausible', available: false, icon: '📈' },
               { name: 'HubSpot', available: false, icon: '🔗' },
             ].map((integration) => (

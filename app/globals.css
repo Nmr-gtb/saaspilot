@@ -27,26 +27,27 @@
 }
 
 .dark {
-  --background: oklch(0.165 0.012 55);
-  --foreground: oklch(0.96 0.006 85);
-  --card: oklch(0.205 0.012 55);
-  --card-foreground: oklch(0.96 0.006 85);
-  --popover: oklch(0.205 0.012 55);
-  --popover-foreground: oklch(0.96 0.006 85);
-  --primary: oklch(0.67 0.155 40);
+  /* Style crème/terracotta — inspiré Claude.ai */
+  --background: oklch(0.158 0.022 42);
+  --foreground: oklch(0.935 0.018 80);
+  --card: oklch(0.205 0.020 42);
+  --card-foreground: oklch(0.935 0.018 80);
+  --popover: oklch(0.205 0.020 42);
+  --popover-foreground: oklch(0.935 0.018 80);
+  --primary: oklch(0.67 0.155 38);
   --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.265 0.012 55);
-  --secondary-foreground: oklch(0.96 0.006 85);
-  --muted: oklch(0.265 0.012 55);
-  --muted-foreground: oklch(0.62 0.008 80);
-  --accent: oklch(0.265 0.012 55);
-  --accent-foreground: oklch(0.96 0.006 85);
+  --secondary: oklch(0.265 0.018 42);
+  --secondary-foreground: oklch(0.935 0.018 80);
+  --muted: oklch(0.265 0.018 42);
+  --muted-foreground: oklch(0.63 0.012 70);
+  --accent: oklch(0.275 0.018 42);
+  --accent-foreground: oklch(0.935 0.018 80);
   --destructive: oklch(0.704 0.191 22.216);
   --destructive-foreground: oklch(0.985 0 0);
   --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.67 0.155 40);
-  --sidebar: oklch(0.185 0.012 55);
+  --input: oklch(1 0 0 / 14%);
+  --ring: oklch(0.67 0.155 38);
+  --sidebar: oklch(0.178 0.022 42);
 }
 
 @theme inline {
